@@ -1,0 +1,15 @@
+{
+  "name": "Progress Bar",
+  "id": "1129293228006804350",
+  "api": "1.0.0",
+  "editorType": [
+    "figma",
+    "figjam"
+  ],
+  "permissions": [
+    "currentuser"
+  ],
+  "containsWidget": true,
+  "main": "dist/code.js",
+  "widgetApi": "1.0.0"
+}
