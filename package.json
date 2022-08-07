@@ -1,6 +1,6 @@
 {
   "name": "figma-progress-bar",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "Use this Figma and FigJam widget to display a progress bar for things that can be expressed in integers.",
   "scripts": {
     "test": "tsc -p widget-src --noEmit",
