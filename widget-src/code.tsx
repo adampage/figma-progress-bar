@@ -11,7 +11,7 @@ const heightSurplusBar = heightProgressBar - 4
 const fontSizeTarget = 12
 const fontSizeSurplus = 10
 const paddingHorizontalTarget = 8
-const paddingHorizontalSurplus = 4
+const paddingHorizontalSurplus = 6
 const widthTargetEmoji = fontSizeTarget
 const widthTargetSpace = fontSizeTarget * (1 / 5)
 const widthTargetDigit = fontSizeTarget * (3 / 4)
@@ -29,15 +29,28 @@ const optionsColorProgressBar = [
   { option: "#444444", tooltip: "Charcoal" }
 ]
 
+const optionsMetTargetEmoji = [
+  { option: "👍", label: "👍" },
+  { option: "✅", label: "✅" },
+  { option: "🥳", label: "🥳" },
+  { option: "🎉", label: "🎉" },
+  { option: "🚀", label: "🚀" },
+  { option: "⭐️", label: "⭐️" },
+  { option: "🏅", label: "🏅" },
+  { option: "😎", label: "😎" }
+]
+
 const colorDefault = optionsColorProgressBar[0].option
+const metTargetEmojiDefault = optionsMetTargetEmoji[0].option
 
 function ProgressBar() {
-  const propertyMenu: WidgetPropertyMenuItem[] = []
   const [colorProgressBar, setColorProgressBar] = useSyncedState("colorProgressBar", colorDefault)
+  const [metTargetEmoji, setMetTargetEmoji] = useSyncedState("metTargetEmoji", metTargetEmojiDefault)
   const [numCount, setCount] = useSyncedState("count", initCount)
   const [numTarget, setTarget] = useSyncedState("target", initTarget)
   const numSurplus = Math.max(0, numCount - numTarget)
   const metTarget = numCount >= numTarget
+  const propertyMenu: WidgetPropertyMenuItem[] = []
 
   propertyMenu.push({
     tooltip: 'Target - 1',
@@ -60,7 +73,15 @@ function ProgressBar() {
     propertyName: 'colorProgressBar',
     tooltip: 'Progress bar color',
     selectedOption: colorDefault,
-    options: optionsColorProgressBar,
+    options: optionsColorProgressBar
+  })
+
+  propertyMenu.push({
+    itemType: 'dropdown',
+    propertyName: 'metTargetEmoji',
+    tooltip: 'Emoji when target met',
+    selectedOption: metTargetEmojiDefault,
+    options: optionsMetTargetEmoji
   })
 
   propertyMenu.push({
@@ -72,6 +93,8 @@ function ProgressBar() {
   usePropertyMenu(propertyMenu, ({ propertyName, propertyValue }) => {
     if (propertyName === 'colorProgressBar' && propertyValue) {
       setColorProgressBar(propertyValue)
+    } else if (propertyName === 'metTargetEmoji' && propertyValue) {
+      setMetTargetEmoji(propertyValue)
     } else if (propertyName === 'incTarget') {
       setTarget(numTarget + 1)
     } else if (propertyName === 'decTarget' && numTarget > minTarget) {
@@ -90,12 +113,12 @@ function ProgressBar() {
   const widthSurplusArea = Math.max(0.01, widthOverflowArea - 1)
 
   // Prepare text summaries and determine layout triggers
-  const textProgress = metTarget ? `👍 ${numTarget}` : `${Math.min(numCount, numTarget)} of ${numTarget}`
-  const textSurplus = numSurplus ? ` + ${numSurplus}` : ``
+  const textProgress = metTarget ? `${metTargetEmoji} ${numTarget}` : `${Math.min(numCount, numTarget)} of ${numTarget}`
+  const textSurplus = numSurplus ? `+ ${numSurplus}` : ``
   const numDigitsTarget = numTarget.toString().length
   const numDigitsSurplus = numSurplus.toString().length
   const widthTextTarget = (paddingHorizontalTarget * 2) + widthTargetEmoji + widthTargetSpace + (numDigitsTarget * widthTargetDigit)
-  const widthTextSurplus = (paddingHorizontalSurplus * 2) + widthSurplusSpace + widthSurplusDigit + widthSurplusSpace + (numDigitsSurplus * widthSurplusDigit)
+  const widthTextSurplus = (paddingHorizontalSurplus * 2) + widthSurplusDigit + widthSurplusSpace + (numDigitsSurplus * widthSurplusDigit)
   const targetCanFitText = widthProgressSpace > widthTextTarget
   const overflowCanFitText = widthOverflowArea > widthTextSurplus
 
