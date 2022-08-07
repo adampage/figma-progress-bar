@@ -1,8 +1,10 @@
 const { widget } = figma
 const { AutoLayout, SVG, Text, Rectangle, Input, useSyncedState, usePropertyMenu } = widget
 
-const initShowEditUI = false
-const initCount = 0
+const maxInteger = 999999
+const initShowAdvancedUI = false
+const minCount = 0
+const initCount = minCount
 const minTarget = 1
 const initTarget = 5
 const widthWidget = 240
@@ -18,6 +20,7 @@ const widthTargetSpace = fontSizeTarget * (1 / 5)
 const widthTargetDigit = fontSizeTarget * (3 / 4)
 const widthSurplusSpace = fontSizeSurplus * (1 / 5)
 const widthSurplusDigit = fontSizeSurplus * (3 / 4)
+const cornerRadiusInput = 1
 
 const optionsColorProgressBar = [
   { option: "#5963FF", tooltip: "Blue" },
@@ -30,7 +33,7 @@ const optionsColorProgressBar = [
   { option: "#444444", tooltip: "Charcoal" }
 ]
 
-const optionsMetTargetEmoji = [
+const optionsEmojiSuccess = [
   { option: "👍", label: "👍" },
   { option: "✅", label: "✅" },
   { option: "🥳", label: "🥳" },
@@ -42,12 +45,12 @@ const optionsMetTargetEmoji = [
 ]
 
 const colorProgressBarDefault = optionsColorProgressBar[0].option
-const metTargetEmojiDefault = optionsMetTargetEmoji[0].option
+const emojiSuccessDefault = optionsEmojiSuccess[0].option
 
 function ProgressBar() {
-  const [showEditUI, toggleEditUI] = useSyncedState("showEditUI", initShowEditUI)
+  const [showAdvancedUI, toggleAdvancedUI] = useSyncedState("showAdvancedUI", initShowAdvancedUI)
   const [colorProgressBar, setColorProgressBar] = useSyncedState("colorProgressBar", colorProgressBarDefault)
-  const [metTargetEmoji, setMetTargetEmoji] = useSyncedState("metTargetEmoji", metTargetEmojiDefault)
+  const [emojiSuccess, setEmojiSuccess] = useSyncedState("emojiSuccess", emojiSuccessDefault)
   const [numCount, setCount] = useSyncedState("count", initCount)
   const [numTarget, setTarget] = useSyncedState("target", initTarget)
   const numSurplus = Math.max(0, numCount - numTarget)
@@ -55,21 +58,21 @@ function ProgressBar() {
   const propertyMenu: WidgetPropertyMenuItem[] = []
 
   propertyMenu.push({
-    tooltip: 'Show / hide UI',
-    propertyName: 'toggleEditUI',
-    itemType: 'action'
-  })
-
-  propertyMenu.push({
-    tooltip: 'Target - 1',
+    tooltip: 'Target － 1',
     propertyName: 'decTarget',
     itemType: 'action',
   })
 
   propertyMenu.push({
-    tooltip: 'Target + 1',
+    tooltip: 'Target ＋ 1',
     propertyName: 'incTarget',
     itemType: 'action',
+  })
+
+  propertyMenu.push({
+    tooltip: 'Advanced',
+    propertyName: 'toggleAdvancedUI',
+    itemType: 'action'
   })
 
   propertyMenu.push({
@@ -86,33 +89,23 @@ function ProgressBar() {
 
   propertyMenu.push({
     itemType: 'dropdown',
-    propertyName: 'metTargetEmoji',
-    tooltip: 'Emoji when target met',
-    selectedOption: metTargetEmoji,
-    options: optionsMetTargetEmoji
-  })
-
-  propertyMenu.push({
-    tooltip: 'Reset',
-    propertyName: 'reset',
-    itemType: 'action',
+    propertyName: 'emojiSuccess',
+    tooltip: 'Success emoji',
+    selectedOption: emojiSuccess,
+    options: optionsEmojiSuccess
   })
 
   usePropertyMenu(propertyMenu, ({ propertyName, propertyValue }) => {
     if (propertyName === 'colorProgressBar' && propertyValue) {
       setColorProgressBar(propertyValue)
-    } else if (propertyName === 'metTargetEmoji' && propertyValue) {
-      setMetTargetEmoji(propertyValue)
-    } else if (propertyName === 'incTarget') {
+    } else if (propertyName === 'emojiSuccess' && propertyValue) {
+      setEmojiSuccess(propertyValue)
+    } else if (propertyName === 'incTarget' && numTarget < maxInteger) {
       setTarget(numTarget + 1)
     } else if (propertyName === 'decTarget' && numTarget > minTarget) {
       setTarget(numTarget - 1)
-    } else if (propertyName === 'toggleEditUI') {
-      toggleEditUI(!showEditUI)
-    } else if (propertyName === 'reset') {
-      setCount(initCount)
-      setTarget(initTarget)
-      toggleEditUI(initShowEditUI)
+    } else if (propertyName === 'toggleAdvancedUI') {
+      toggleAdvancedUI(!showAdvancedUI)
     }
   })
 
@@ -124,7 +117,7 @@ function ProgressBar() {
   const widthSurplusArea = Math.max(0.01, widthOverflowArea - 1)
 
   // Prepare text summaries and determine layout triggers
-  const textProgress = metTarget ? `${metTargetEmoji} ${numTarget}` : `${Math.min(numCount, numTarget)} of ${numTarget}`
+  const textProgress = metTarget ? `${emojiSuccess} ${numTarget}` : `${Math.min(numCount, numTarget)} of ${numTarget}`
   const textSurplus = numSurplus ? `+ ${numSurplus}` : ``
   const numDigitsTarget = numTarget.toString().length
   const numDigitsSurplus = numSurplus.toString().length
@@ -139,122 +132,8 @@ function ProgressBar() {
       direction="vertical"
       width={widthWidget}
       padding={{ horizontal: 0, vertical: paddingWidget }}
-      spacing={10}
+      spacing={4}
     >
-      <AutoLayout
-        name="UI"
-        hidden={!showEditUI}
-        width="fill-parent"
-        padding={{ horizontal: paddingWidget, vertical: 0 }}
-      >
-        <AutoLayout
-          name="Form"
-          direction="horizontal"
-          width="fill-parent"
-          fill="#eee"
-          padding={8}
-          spacing={4}
-          stroke={{ r: 0, g: 0, b: 0, a: 0.25 }}
-          strokeWidth={1}
-          strokeAlign="inside"
-          cornerRadius={2}
-        >
-          <AutoLayout
-            name="Input / Count"
-            direction="vertical"
-            spacing={4}
-          >
-            <Text
-              name="Label"
-              fontSize={8}
-              fontWeight={900}
-              fill="#000"
-            >
-              Count
-            </Text>
-            <Input
-              value={numCount.toString()}
-              placeholder="Integer"
-              onTextEditEnd={(e) => {
-                let newCount = parseInt(e.characters)
-                if (!newCount || newCount < initCount) {
-                  newCount = initCount
-                }
-                setCount(newCount);
-              }}
-              fontSize={10}
-              fill="#000"
-              width={40}
-              inputFrameProps={{
-                fill: "#fff",
-                stroke: "#333",
-                cornerRadius: 1,
-                padding: 4,
-              }}
-              inputBehavior="truncate"
-            />
-          </AutoLayout>
-          <AutoLayout
-            name="]-["
-            padding={{ top: 18, left: 0, bottom: 0, right: 0 }}
-          >
-            <Text
-              fontSize={10}
-              fontWeight={400}
-              fill="#000"
-            >
-              of
-            </Text>
-          </AutoLayout>
-          <AutoLayout
-            name="Input / Target"
-            direction="vertical"
-            spacing={4}
-          >
-            <Text
-              name="Label"
-              fontSize={8}
-              fontWeight={900}
-              fill="#000"
-            >
-              Target
-            </Text>
-            <Input
-              value={numTarget.toString()}
-              placeholder="Integer"
-              onTextEditEnd={(e) => {
-                let newTarget = parseInt(e.characters)
-                if (!newTarget || newTarget < initTarget) {
-                  newTarget = initTarget
-                }
-                setTarget(newTarget);
-              }}
-              fontSize={10}
-              fill="#000"
-              width={40}
-              inputFrameProps={{
-                fill: "#fff",
-                stroke: "#333",
-                cornerRadius: 1,
-                padding: 4,
-              }}
-              inputBehavior="truncate"
-            />
-          </AutoLayout>
-          <AutoLayout
-            name="]-["
-            padding={{ top: 18, left: 0, bottom: 0, right: 0 }}
-          >
-            <Text
-              fontSize={10}
-              fontWeight={400}
-              fill="#000"
-            >
-              = {(numCount / numTarget * 100).toFixed(2)}%
-            </Text>
-          </AutoLayout>
-        </AutoLayout>
-      </AutoLayout>
       <AutoLayout
         name="Bar"
         direction="vertical"
@@ -292,6 +171,7 @@ function ProgressBar() {
               >
                 <AutoLayout
                   name="]-["
+                  width="fill-parent"
                   verticalAlignItems="center"
                   height="fill-parent"
                   padding={{ horizontal: paddingHorizontalTarget, vertical: 0 }}
@@ -413,6 +293,7 @@ function ProgressBar() {
           width={widthWidget / 2}
           height={heightProgressBar}
           verticalAlignItems="center"
+          hidden={numCount <= minCount}
           opacity={0.25}
           hoverStyle={{
             opacity: 1
@@ -443,12 +324,15 @@ function ProgressBar() {
           height={heightProgressBar}
           verticalAlignItems="center"
           horizontalAlignItems="end"
+          hidden={numCount >= maxInteger}
           opacity={0.25}
           hoverStyle={{
             opacity: 1
           }}
           onClick={() => {
-            setCount(numCount + 1)
+            if (numCount < maxInteger) {
+              setCount(numCount + 1)
+            }
           }}
         >
           <Text
@@ -460,6 +344,301 @@ function ProgressBar() {
           >
             ▶
           </Text>
+        </AutoLayout>
+      </AutoLayout>
+      <AutoLayout
+        name="UI"
+        hidden={!showAdvancedUI}
+        width="fill-parent"
+        padding={{ horizontal: paddingWidget, vertical: 0 }}
+      >
+        <AutoLayout
+          name="Form"
+          direction="vertical"
+          width="fill-parent"
+          fill="#eee"
+          padding={8}
+          spacing={8}
+          stroke={{ r: 0, g: 0, b: 0, a: 0.25 }}
+          strokeWidth={1}
+          strokeAlign="inside"
+          cornerRadius={2}
+        >
+          <AutoLayout
+            direction="horizontal"
+            width="fill-parent"
+            spacing={4}
+          >
+            <AutoLayout
+              name="Field / Count"
+              direction="vertical"
+              spacing={4}
+            >
+              <Text
+                name="Label"
+                fontSize={8}
+                fontWeight={900}
+                fill="#000"
+              >
+                Count
+              </Text>
+              <AutoLayout
+                name="Number input"
+                spacing={-1}
+              >
+                <Input
+                  value={numCount.toString()}
+                  placeholder="#"
+                  onTextEditEnd={(e) => {
+                    let newCount = parseInt(e.characters)
+                    if (!newCount || newCount < minCount) {
+                      newCount = minCount
+                    } else if (newCount >= maxInteger) {
+                      newCount = maxInteger
+                    }
+                    setCount(newCount)
+                  }}
+                  fontSize={10}
+                  fill="#000"
+                  width={40}
+                  inputFrameProps={{
+                    name: 'Text input',
+                    fill: "#fff",
+                    stroke: "#333",
+                    cornerRadius: {
+                      topLeft: cornerRadiusInput,
+                      topRight: 0,
+                      bottomRight: 0,
+                      bottomLeft: cornerRadiusInput
+                    },
+                    padding: 4,
+                  }}
+                  inputBehavior="truncate"
+                />
+                <AutoLayout
+                  name="Button / Decrement"
+                  width={20}
+                  height="fill-parent"
+                  horizontalAlignItems="center"
+                  verticalAlignItems="center"
+                  stroke="#333"
+                  fill="#666"
+                  hoverStyle={{
+                    fill: numCount > minCount ? "#444" : "#666"
+                  }}
+                  onClick={() => {
+                    if (numCount > initCount) {
+                      setCount(numCount - 1)
+                    }
+                  }}
+                >
+                  <Text
+                    fontSize={14}
+                    fontWeight={900}
+                    fill={numCount > minCount ? "#fff" : "#555"}
+                  >－</Text>
+                </AutoLayout>
+                <AutoLayout
+                  name="Button / Increment"
+                  width={20}
+                  height="fill-parent"
+                  horizontalAlignItems="center"
+                  verticalAlignItems="center"
+                  stroke="#333"
+                  fill="#666"
+                  cornerRadius={{
+                    topLeft: 0,
+                    topRight: cornerRadiusInput,
+                    bottomRight: cornerRadiusInput,
+                    bottomLeft: 0
+                  }}
+                  hoverStyle={{
+                    fill: numCount < maxInteger ? "#444" : "#666"
+                  }}
+                  onClick={() => {
+                    if (numCount < maxInteger) {
+                      setCount(numCount + 1)
+                    }
+                  }}
+                >
+                  <Text
+                    fontSize={14}
+                    fontWeight={900}
+                    fill={numCount < maxInteger ? "#fff" : "#555"}
+                  >＋</Text>
+                </AutoLayout>
+              </AutoLayout>
+            </AutoLayout>
+            <AutoLayout
+              name="]-["
+              padding={{ top: 18, left: 0, bottom: 0, right: 0 }}
+            >
+              <Text
+                fontSize={10}
+                fontWeight={400}
+                fill="#000"
+              >
+                of
+              </Text>
+            </AutoLayout>
+            <AutoLayout
+              name="Field / Target"
+              direction="vertical"
+              spacing={4}
+            >
+              <Text
+                name="Label"
+                fontSize={8}
+                fontWeight={900}
+                fill="#000"
+              >
+                Target
+              </Text>
+              <AutoLayout
+                name="Number input"
+                spacing={-1}
+              >
+                <Input
+                  value={numTarget.toString()}
+                  placeholder="#"
+                  onTextEditEnd={(e) => {
+                    let newTarget = parseInt(e.characters)
+                    if (!newTarget || newTarget < minTarget) {
+                      newTarget = minTarget
+                    } else if (newTarget >= maxInteger) {
+                      newTarget = maxInteger
+                    }
+                    setTarget(newTarget);
+                  }}
+                  fontSize={10}
+                  fill="#000"
+                  width={40}
+                  inputFrameProps={{
+                    name: 'Text input',
+                    fill: "#fff",
+                    stroke: "#333",
+                    cornerRadius: {
+                      topLeft: cornerRadiusInput,
+                      topRight: 0,
+                      bottomRight: 0,
+                      bottomLeft: cornerRadiusInput
+                    },
+                    padding: 4,
+                  }}
+                  inputBehavior="truncate"
+                />
+                <AutoLayout
+                  name="Button / Decrement"
+                  width={20}
+                  height="fill-parent"
+                  horizontalAlignItems="center"
+                  verticalAlignItems="center"
+                  stroke="#333"
+                  fill="#666"
+                  hoverStyle={{
+                    fill: numTarget > minTarget ? "#444" : "#666"
+                  }}
+                  onClick={() => {
+                    if (numTarget > minTarget) {
+                      setTarget(numTarget - 1)
+                    }
+                  }}
+                >
+                  <Text
+                    fontSize={14}
+                    fontWeight={900}
+                    fill={numTarget > minTarget ? "#fff" : "#555"}
+                  >－</Text>
+                </AutoLayout>
+                <AutoLayout
+                  name="Button / Increment"
+                  width={20}
+                  height="fill-parent"
+                  horizontalAlignItems="center"
+                  verticalAlignItems="center"
+                  stroke="#333"
+                  fill="#666"
+                  cornerRadius={{
+                    topLeft: 0,
+                    topRight: cornerRadiusInput,
+                    bottomRight: cornerRadiusInput,
+                    bottomLeft: 0
+                  }}
+                  hoverStyle={{
+                    fill: numTarget < maxInteger ? "#444" : "#666"
+                  }}
+                  onClick={() => {
+                    if (numTarget < maxInteger) {
+                      setTarget(numTarget + 1)
+                    }
+                  }}
+                >
+                  <Text
+                    fontSize={14}
+                    fontWeight={900}
+                    fill={numTarget < maxInteger ? "#fff" : "#555"}
+                  >＋</Text>
+                </AutoLayout>
+              </AutoLayout>
+            </AutoLayout>
+          </AutoLayout>
+          <AutoLayout
+            name="]-["
+            spacing={4}
+          >
+            <Text
+              fontSize={10}
+              fontWeight={900}
+              fill="#000"
+            >
+              {(numCount / numTarget * 100).toFixed(2)}%
+            </Text>
+            <Text
+              fontSize={10}
+              fontWeight={400}
+              fill="#000"
+            >
+              of target
+            </Text>
+          </AutoLayout>
+          <Text
+            fontSize={8}
+            textDecoration="underline"
+            fill="#00f"
+            hoverStyle={{
+              fill: "#009"
+            }}
+            onClick={() => {
+              setCount(initCount)
+              setTarget(initTarget)
+            }}
+          >
+            Reset values
+          </Text>
+          <AutoLayout
+            positioning="absolute"
+            x={widthAvailableSpace - 20}
+            y={0}
+            width={20}
+            height={20}
+            horizontalAlignItems="center"
+            verticalAlignItems="center"
+            opacity={0.5}
+            hoverStyle={{
+              opacity: 1
+            }}
+            onClick={() => {
+              toggleAdvancedUI(initShowAdvancedUI)
+            }}
+          >
+            <Text
+              fontWeight={900}
+              fontSize={10}
+              fill="#000"
+            >
+              ✖
+            </Text>
+          </AutoLayout>
         </AutoLayout>
       </AutoLayout>
     </AutoLayout>
