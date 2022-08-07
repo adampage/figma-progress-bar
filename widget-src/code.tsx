@@ -1,6 +1,7 @@
 const { widget } = figma
-const { AutoLayout, SVG, Text, Rectangle, useSyncedState, usePropertyMenu } = widget
+const { AutoLayout, SVG, Text, Rectangle, Input, useSyncedState, usePropertyMenu } = widget
 
+const initShowEditUI = false
 const initCount = 0
 const minTarget = 1
 const initTarget = 5
@@ -44,6 +45,7 @@ const colorProgressBarDefault = optionsColorProgressBar[0].option
 const metTargetEmojiDefault = optionsMetTargetEmoji[0].option
 
 function ProgressBar() {
+  const [showEditUI, toggleEditUI] = useSyncedState("showEditUI", initShowEditUI)
   const [colorProgressBar, setColorProgressBar] = useSyncedState("colorProgressBar", colorProgressBarDefault)
   const [metTargetEmoji, setMetTargetEmoji] = useSyncedState("metTargetEmoji", metTargetEmojiDefault)
   const [numCount, setCount] = useSyncedState("count", initCount)
@@ -51,6 +53,12 @@ function ProgressBar() {
   const numSurplus = Math.max(0, numCount - numTarget)
   const metTarget = numCount >= numTarget
   const propertyMenu: WidgetPropertyMenuItem[] = []
+
+  propertyMenu.push({
+    tooltip: 'Show / hide UI',
+    propertyName: 'toggleEditUI',
+    itemType: 'action'
+  })
 
   propertyMenu.push({
     tooltip: 'Target - 1',
@@ -99,9 +107,12 @@ function ProgressBar() {
       setTarget(numTarget + 1)
     } else if (propertyName === 'decTarget' && numTarget > minTarget) {
       setTarget(numTarget - 1)
+    } else if (propertyName === 'toggleEditUI') {
+      toggleEditUI(!showEditUI)
     } else if (propertyName === 'reset') {
       setCount(initCount)
       setTarget(initTarget)
+      toggleEditUI(initShowEditUI)
     }
   })
 
@@ -125,205 +136,331 @@ function ProgressBar() {
   return (
     <AutoLayout
       name="Widget"
-      direction="horizontal"
-      verticalAlignItems="center"
+      direction="vertical"
       width={widthWidget}
-      padding={paddingWidget}
+      padding={{ horizontal: 0, vertical: paddingWidget }}
+      spacing={10}
     >
-
       <AutoLayout
-        name="Available space"
-        direction="horizontal"
-        verticalAlignItems="center"
+        name="UI"
+        hidden={!showEditUI}
         width="fill-parent"
+        padding={{ horizontal: paddingWidget, vertical: 0 }}
       >
         <AutoLayout
-          name="Target space"
-          width={widthProgressSpace}
-          height={heightProgressBar}
-          fill="#fff"
-          stroke={{ r: 0, g: 0, b: 0, a: 0.75 }}
+          name="Form"
+          direction="horizontal"
+          width="fill-parent"
+          fill="#eee"
+          padding={8}
+          spacing={4}
+          stroke={{ r: 0, g: 0, b: 0, a: 0.25 }}
           strokeWidth={1}
           strokeAlign="inside"
           cornerRadius={2}
         >
           <AutoLayout
-            name="Progress space"
-            positioning="absolute"
-            x={0}
-            y={0}
-            width={widthProgressSpace}
-            height={heightProgressBar}
+            name="Input / Count"
+            direction="vertical"
+            spacing={4}
           >
-            <AutoLayout
-              name="]-["
-              verticalAlignItems="center"
-              height="fill-parent"
-              padding={{ horizontal: paddingHorizontalTarget, vertical: 0 }}
+            <Text
+              name="Label"
+              fontSize={8}
+              fontWeight={900}
+              fill="#000"
             >
-              <Text
-                name="Progress text / Dark"
-                fontSize={fontSizeTarget}
-                fontWeight={900}
-                fill={{ r: 0, g: 0, b: 0, a: 0.75 }}
-              >
-                {textProgress}
-              </Text>
-            </AutoLayout>
+              Count
+            </Text>
+            <Input
+              value={numCount.toString()}
+              placeholder="Integer"
+              onTextEditEnd={(e) => {
+                let newCount = parseInt(e.characters)
+                if (!newCount || newCount < initCount) {
+                  newCount = initCount
+                }
+                setCount(newCount);
+              }}
+              fontSize={10}
+              fill="#000"
+              width={40}
+              inputFrameProps={{
+                fill: "#fff",
+                stroke: "#333",
+                cornerRadius: 1,
+                padding: 4,
+              }}
+              inputBehavior="truncate"
+            />
           </AutoLayout>
           <AutoLayout
-            name="Progress bar"
-            hidden={!numCount}
-            positioning="absolute"
-            x={0}
-            y={0}
-            width={widthProgressBar || 0.01}
-            height={heightProgressBar}
-            fill={numCount < numTarget ? colorProgressBar : colorProgressBar}
+            name="]-["
+            padding={{ top: 18, left: 0, bottom: 0, right: 0 }}
+          >
+            <Text
+              fontSize={10}
+              fontWeight={400}
+              fill="#000"
+            >
+              of
+            </Text>
+          </AutoLayout>
+          <AutoLayout
+            name="Input / Target"
+            direction="vertical"
+            spacing={4}
+          >
+            <Text
+              name="Label"
+              fontSize={8}
+              fontWeight={900}
+              fill="#000"
+            >
+              Target
+            </Text>
+            <Input
+              value={numTarget.toString()}
+              placeholder="Integer"
+              onTextEditEnd={(e) => {
+                let newTarget = parseInt(e.characters)
+                if (!newTarget || newTarget < initTarget) {
+                  newTarget = initTarget
+                }
+                setTarget(newTarget);
+              }}
+              fontSize={10}
+              fill="#000"
+              width={40}
+              inputFrameProps={{
+                fill: "#fff",
+                stroke: "#333",
+                cornerRadius: 1,
+                padding: 4,
+              }}
+              inputBehavior="truncate"
+            />
+          </AutoLayout>
+          <AutoLayout
+            name="]-["
+            padding={{ top: 18, left: 0, bottom: 0, right: 0 }}
+          >
+            <Text
+              fontSize={10}
+              fontWeight={400}
+              fill="#000"
+            >
+              = {(numCount / numTarget * 100).toFixed(2)}%
+            </Text>
+          </AutoLayout>
+        </AutoLayout>
+      </AutoLayout>
+      <AutoLayout
+        name="Bar"
+        direction="vertical"
+        width={widthWidget}
+      >
+        <AutoLayout
+          name="]-["
+          direction="horizontal"
+          width="fill-parent"
+          padding={{ horizontal: paddingWidget, vertical: 0 }}
+        >
+          <AutoLayout
+            name="Available space"
+            direction="horizontal"
+            verticalAlignItems="center"
+            width="fill-parent"
           >
             <AutoLayout
-              name="]-["
+              name="Target space"
+              width={widthProgressSpace}
+              height={heightProgressBar}
+              fill="#fff"
+              stroke={{ r: 0, g: 0, b: 0, a: 0.75 }}
+              strokeWidth={1}
+              strokeAlign="inside"
+              cornerRadius={2}
+            >
+              <AutoLayout
+                name="Progress space"
+                positioning="absolute"
+                x={0}
+                y={0}
+                width={widthProgressSpace}
+                height={heightProgressBar}
+              >
+                <AutoLayout
+                  name="]-["
+                  verticalAlignItems="center"
+                  height="fill-parent"
+                  padding={{ horizontal: paddingHorizontalTarget, vertical: 0 }}
+                >
+                  <Text
+                    name="Progress text / Dark"
+                    fontSize={fontSizeTarget}
+                    fontWeight={900}
+                    fill={{ r: 0, g: 0, b: 0, a: 0.75 }}
+                  >
+                    {textProgress}
+                  </Text>
+                </AutoLayout>
+              </AutoLayout>
+              <AutoLayout
+                name="Progress bar"
+                hidden={!numCount}
+                positioning="absolute"
+                x={0}
+                y={0}
+                width={widthProgressBar || 0.01}
+                height={heightProgressBar}
+                fill={numCount < numTarget ? colorProgressBar : colorProgressBar}
+              >
+                <AutoLayout
+                  name="]-["
+                  verticalAlignItems="center"
+                  width={widthProgressBar || 0.01}
+                  height="fill-parent"
+                  padding={{ horizontal: paddingHorizontalTarget, vertical: 0 }}
+                  fill={metTarget ? { r: 0, g: 0, b: 0, a: 0.32 } : { r: 0, g: 0, b: 0, a: 0 }}
+                >
+                  <Text
+                    name="Progress text / Light"
+                    hidden={!targetCanFitText}
+                    fontSize={fontSizeTarget}
+                    fontWeight={900}
+                    fill="#fff"
+                  >
+                    {textProgress}
+                  </Text>
+                </AutoLayout>
+              </AutoLayout>
+            </AutoLayout>
+            <AutoLayout
+              name="Overflow space"
+              hidden={!numSurplus}
+              width={widthOverflowArea}
+              height={heightSurplusBar}
+            >
+              <AutoLayout
+                name="Surplus space"
+                positioning="absolute"
+                x={1}
+                y={0}
+                width={widthSurplusArea}
+                height={heightSurplusBar}
+              >
+                <AutoLayout
+                  name="]-["
+                  verticalAlignItems="center"
+                  height="fill-parent"
+                  padding={{ horizontal: paddingHorizontalSurplus, vertical: 0 }}
+                >
+                </AutoLayout>
+              </AutoLayout>
+              <AutoLayout
+                name="Surplus bar"
+                positioning="absolute"
+                x={1}
+                y={0}
+                width={widthSurplusArea}
+                height={heightSurplusBar}
+                fill={numCount < numTarget ? colorProgressBar : colorProgressBar}
+                stroke={{ r: 0, g: 0, b: 0, a: 0.2 }}
+                strokeWidth={1}
+                strokeAlign="inside"
+                cornerRadius={{ topRight: 2, bottomRight: 2 }}
+              >
+              </AutoLayout>
+            </AutoLayout>
+            <AutoLayout
+              name="Surplus text"
+              positioning="absolute"
+              horizontalAlignItems={overflowCanFitText ? "start" : "end"}
               verticalAlignItems="center"
-              width={widthProgressBar || 0.01}
-              height="fill-parent"
-              padding={{ horizontal: paddingHorizontalTarget, vertical: 0 }}
-              fill={metTarget ? { r: 0, g: 0, b: 0, a: 0.32 } : { r: 0, g: 0, b: 0, a: 0 }}
+              x={overflowCanFitText ? widthProgressSpace : 0}
+              y={0}
+              width={overflowCanFitText ? widthOverflowArea : widthProgressSpace}
+              height={heightProgressBar}
+              padding={overflowCanFitText ? { horizontal: paddingHorizontalSurplus } : { horizontal: paddingHorizontalTarget }}
             >
               <Text
                 name="Progress text / Light"
-                hidden={!targetCanFitText}
+                hidden={targetCanFitText}
                 fontSize={fontSizeTarget}
                 fontWeight={900}
                 fill="#fff"
               >
                 {textProgress}
               </Text>
+              <Text
+                name="Surplus text / Light"
+                fontSize={fontSizeSurplus}
+                fontWeight={700}
+                fill="#fff"
+              >
+                {textSurplus}
+              </Text>
             </AutoLayout>
           </AutoLayout>
         </AutoLayout>
         <AutoLayout
-          name="Overflow space"
-          hidden={!numSurplus}
-          width={widthOverflowArea}
-          height={heightSurplusBar}
-        >
-          <AutoLayout
-            name="Surplus space"
-            positioning="absolute"
-            x={1}
-            y={0}
-            width={widthSurplusArea}
-            height={heightSurplusBar}
-          >
-            <AutoLayout
-              name="]-["
-              verticalAlignItems="center"
-              height="fill-parent"
-              padding={{ horizontal: paddingHorizontalSurplus, vertical: 0 }}
-            >
-            </AutoLayout>
-          </AutoLayout>
-          <AutoLayout
-            name="Surplus bar"
-            positioning="absolute"
-            x={1}
-            y={0}
-            width={widthSurplusArea}
-            height={heightSurplusBar}
-            fill={numCount < numTarget ? colorProgressBar : colorProgressBar}
-            stroke={{ r: 0, g: 0, b: 0, a: 0.2 }}
-            strokeWidth={1}
-            strokeAlign="inside"
-            cornerRadius={{ topRight: 2, bottomRight: 2 }}
-          >
-          </AutoLayout>
-        </AutoLayout>
-        <AutoLayout
-          name="Surplus text"
+          name="Button / Decrement"
+          tooltip="Reduce progress by 1"
           positioning="absolute"
-          horizontalAlignItems={overflowCanFitText ? "start" : "end"}
-          verticalAlignItems="center"
-          x={overflowCanFitText ? widthProgressSpace : 0}
+          x={0}
           y={0}
-          width={overflowCanFitText ? widthOverflowArea : widthProgressSpace}
+          width={widthWidget / 2}
           height={heightProgressBar}
-          padding={overflowCanFitText ? { horizontal: paddingHorizontalSurplus } : { horizontal: paddingHorizontalTarget }}
+          verticalAlignItems="center"
+          opacity={0.25}
+          hoverStyle={{
+            opacity: 1
+          }}
+          onClick={() => {
+            if (numCount > initCount) {
+              setCount(numCount - 1)
+            }
+          }}
         >
           <Text
-            name="Progress text / Light"
-            hidden={targetCanFitText}
-            fontSize={fontSizeTarget}
+            width={paddingWidget}
+            horizontalAlignText="center"
+            fontSize={12}
             fontWeight={900}
-            fill="#fff"
+            fill="#000"
           >
-            {textProgress}
-          </Text>
-          <Text
-            name="Surplus text / Light"
-            fontSize={fontSizeSurplus}
-            fontWeight={700}
-            fill="#fff"
-          >
-            {textSurplus}
+            ◀
           </Text>
         </AutoLayout>
-      </AutoLayout>
-      <AutoLayout
-        name="Button / Decrement"
-        tooltip="Reduce progress by 1"
-        positioning="absolute"
-        x={0}
-        y={paddingWidget}
-        width={widthWidget / 2}
-        height={heightProgressBar}
-        verticalAlignItems="center"
-        opacity={0.25}
-        hoverStyle={{
-          opacity: 1
-        }}
-        onClick={() => {
-          if (numCount > initCount) {
-            setCount(numCount - 1)
-          }
-        }}
-      >
-        <Text
-          width={paddingWidget}
-          horizontalAlignText="center"
-          fontSize={12}
-          fontWeight={900}
-          fill="#000"
+        <AutoLayout
+          name="Button / Increment"
+          tooltip="Increase progress by 1"
+          positioning="absolute"
+          x={widthWidget / 2}
+          y={0}
+          width={widthWidget / 2}
+          height={heightProgressBar}
+          verticalAlignItems="center"
+          horizontalAlignItems="end"
+          opacity={0.25}
+          hoverStyle={{
+            opacity: 1
+          }}
+          onClick={() => {
+            setCount(numCount + 1)
+          }}
         >
-          ◀
-        </Text>
-      </AutoLayout>
-      <AutoLayout
-        name="Button / Increment"
-        tooltip="Increase progress by 1"
-        positioning="absolute"
-        x={widthWidget / 2}
-        y={paddingWidget}
-        width={widthWidget / 2}
-        height={heightProgressBar}
-        verticalAlignItems="center"
-        horizontalAlignItems="end"
-        opacity={0.25}
-        hoverStyle={{
-          opacity: 1
-        }}
-        onClick={() => {
-          setCount(numCount + 1)
-        }}
-      >
-        <Text
-          width={paddingWidget}
-          horizontalAlignText="center"
-          fontSize={12}
-          fontWeight={900}
-          fill="#000"
-        >
-          ▶
-        </Text>
+          <Text
+            width={paddingWidget}
+            horizontalAlignText="center"
+            fontSize={12}
+            fontWeight={900}
+            fill="#000"
+          >
+            ▶
+          </Text>
+        </AutoLayout>
       </AutoLayout>
     </AutoLayout>
   )
