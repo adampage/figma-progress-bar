@@ -40,11 +40,11 @@ const optionsMetTargetEmoji = [
   { option: "😎", label: "😎" }
 ]
 
-const colorDefault = optionsColorProgressBar[0].option
+const colorProgressBarDefault = optionsColorProgressBar[0].option
 const metTargetEmojiDefault = optionsMetTargetEmoji[0].option
 
 function ProgressBar() {
-  const [colorProgressBar, setColorProgressBar] = useSyncedState("colorProgressBar", colorDefault)
+  const [colorProgressBar, setColorProgressBar] = useSyncedState("colorProgressBar", colorProgressBarDefault)
   const [metTargetEmoji, setMetTargetEmoji] = useSyncedState("metTargetEmoji", metTargetEmojiDefault)
   const [numCount, setCount] = useSyncedState("count", initCount)
   const [numTarget, setTarget] = useSyncedState("target", initTarget)
@@ -72,7 +72,7 @@ function ProgressBar() {
     itemType: 'color-selector',
     propertyName: 'colorProgressBar',
     tooltip: 'Progress bar color',
-    selectedOption: colorDefault,
+    selectedOption: colorProgressBar,
     options: optionsColorProgressBar
   })
 
@@ -80,7 +80,7 @@ function ProgressBar() {
     itemType: 'dropdown',
     propertyName: 'metTargetEmoji',
     tooltip: 'Emoji when target met',
-    selectedOption: metTargetEmojiDefault,
+    selectedOption: metTargetEmoji,
     options: optionsMetTargetEmoji
   })
 
