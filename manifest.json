@@ -2,6 +2,7 @@
   "name": "Progress Bar",
   "id": "1129311231149791125",
   "api": "1.0.0",
+  "documentAccess": "dynamic-page",
   "editorType": [
     "figma",
     "figjam"

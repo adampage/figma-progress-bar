@@ -1,5 +1,5 @@
 const { widget } = figma
-const { AutoLayout, SVG, Text, Rectangle, Input, useSyncedState, usePropertyMenu } = widget
+const { AutoLayout, Text, Input, useSyncedState, usePropertyMenu } = widget
 
 const maxInteger = 999999
 const initShowAdvancedUI = false

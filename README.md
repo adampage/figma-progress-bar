@@ -16,6 +16,13 @@ Code organization:
 - The widget code is built using esbuild to bundle widget-src/code.tsx into one
 file.
 
+## Dynamic page loading
+
+This widget has been migrated for Figma dynamic page loading.
+
+- The manifest includes `"documentAccess": "dynamic-page"`.
+- `npm run lint` applies the official Figma plugin migration ESLint rules.
+
 ## Build
 
 1. Install the required dependencies with `npm ci`
@@ -25,13 +32,13 @@ file.
 
 ## Develop
 
-Build the widget in development development mode by running:
+Build the widget in development mode by running:
 
 ```sh
 npm run dev
 ```
 
-This command starts the follow in watch mode:
+This command starts the following in watch mode:
 1. typechecking for widget-src
 2. building for widget-src
 
@@ -43,4 +50,7 @@ compiled into the `dist/code.js` file that is referenced by the manifest.json.
 | script                   | description                                      |
 | ------------------------ | ------------------------------------------------ |
 | npm run build            | one-off full build of the widget                 |
+| npm run dev              | watch mode for typechecking and building         |
+| npm run lint             | migration-safe lint checks for Figma APIs        |
+| npm run lint -- --fix    | run lint checks and apply available auto-fixes   |
 | npm run test             | typecheck the widget code                        |
